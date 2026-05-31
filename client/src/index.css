@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ✅ Use regular CSS here, not @apply */
+body {
+  background-color: #fbfaf9; /* Tailwind's bg-neutral-100 */
+  color: #1f2937;            /* Tailwind's text-neutral-800 */
+  font-family: 'DM Sans', sans-serif;
+}

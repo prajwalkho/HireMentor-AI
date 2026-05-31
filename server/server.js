@@ -1,0 +1,221 @@
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const axios = require("axios");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+require("dotenv").config();
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  "/profiles",
+  express.static(path.join(process.cwd(), "uploads", "profiles"))
+);
+
+app.use(
+  "/candidates",
+  express.static(path.join(__dirname, "uploads/candidates"))
+);
+
+app.use(cookieParser());
+
+require("./src/config/db");
+
+const port = process.env.PORT || 5000;
+
+const corsOptions = {
+  origin: true,
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// ======================================================
+// ROUTES
+// ======================================================
+
+const authRoute = require("./src/routes/authroutes");
+const examRoute = require("./src/routes/examRoute");
+const skillroute = require("./src/routes/skillRoute");
+const roleRoutes = require("./src/routes/roleroutes");
+const courseRoutes = require("./src/routes/courseRoutes");
+const courseInfoRoutes = require("./src/routes/courseInfoRoutes");
+const enrollRoutes = require("./src/routes/enrollroute");
+const recruiterRoutes = require("./src/routes/recruiterRoutes");
+const candidateInfo = require("./src/routes/candidateInformationcontrollerroute");
+const Interview    = require("./src/routes/interviewroute");
+const certRoute    = require("./src/routes/certificateRoute");
+
+app.use("/api/v1/auth", authRoute);
+app.use("/api/v2/exam", examRoute);
+app.use("/api/v2/certificates", certRoute);
+app.use("/api/v2/skill", skillroute);
+app.use("/api/roles", roleRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/course-info", courseInfoRoutes);
+app.use("/api/v2/enroll", enrollRoutes);
+app.use("/api/recruiters", recruiterRoutes);
+app.use("/api/v2/candidate", candidateInfo);
+app.use("/api/v2/interview", Interview);
+
+// ======================================================
+// JUDGE0 CODE EXECUTION
+// ======================================================
+
+app.post("/api/v1/run-code", async (req, res) => {
+  try {
+    const { language_id, source_code } = req.body;
+
+    const response = await axios.post(
+      "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
+      {
+        source_code,
+        language_id,
+        stdin: "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(
+      "Judge0 Error:",
+      error?.response?.data || error.message
+    );
+
+    res.status(500).json({
+      error: "Code execution failed",
+    });
+  }
+});
+
+// ======================================================
+// GEMINI AI SETUP
+// ======================================================
+
+console.log(
+  "🔑 Gemini API Key Loaded:",
+  process.env.GEMINI_API_KEY ? "YES (Masked)" : "NO"
+);
+
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY
+);
+
+// ✅ WORKING MODEL
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+});
+
+// ======================================================
+// INTERVIEW QUESTION GENERATOR
+// ======================================================
+
+app.post("/api/generate-interview", async (req, res) => {
+  try {
+    const { jobPosition, jobDesc, jobExperience } = req.body;
+
+    const prompt = `
+Generate exactly 10 interview questions and answers in JSON array format.
+
+Example:
+[
+  {
+    "question":"What is Node.js?",
+    "answer":"Node.js is a JavaScript runtime."
+  }
+]
+
+Job Position: ${jobPosition}
+Job Description: ${jobDesc}
+Experience: ${jobExperience}
+
+Return ONLY valid JSON.
+`;
+
+    const result = await model.generateContent(prompt);
+
+    const response = await result.response;
+
+    let text = response.text();
+
+    // Remove markdown formatting
+    text = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const parsed = JSON.parse(text);
+
+    res.json({
+      success: true,
+      data: parsed,
+    });
+  } catch (error) {
+    console.error(
+      "❌ Gemini SDK Error (Interview):",
+      error.message
+    );
+
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate interview",
+    });
+  }
+});
+
+// ======================================================
+// AI CHAT API
+// ======================================================
+
+app.post("/api/v1/ai/chat", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: "Prompt is required",
+      });
+    }
+
+    const result = await model.generateContent(prompt);
+
+    const response = await result.response;
+
+    const aiResponse =
+      response.text() || "No response generated";
+
+    res.json({
+      success: true,
+      data: aiResponse,
+    });
+  } catch (error) {
+    console.error(
+      "❌ Gemini SDK Error (Chat):",
+      error.message
+    );
+
+    res.status(500).json({
+      success: false,
+      error: "Failed to connect to AI",
+    });
+  }
+});
+
+// ======================================================
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+app.listen(port, () => {
+  console.log(`✅ Server running on port ${port}`);
+});
