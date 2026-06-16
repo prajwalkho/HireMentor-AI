@@ -309,13 +309,13 @@ This project is licensed under the **MIT License** - see the LICENSE file for de
 ## 👥 Contact & Support
 
 ### Author
-- **Name:** Prajwal Kho
-- **Email:** [your-email@example.com]
+- **Name:** Prajwal Khot
+- **Email:** [prajwalkhot39@gmail.com]
 - **GitHub:** [@prajwalkho](https://github.com/prajwalkho)
-- **LinkedIn:** [Your LinkedIn Profile]
+- **LinkedIn:** [www.linkedin.com/in/prajwal-p-khot]
 
 ### Support
-For support, email your-email@example.com or open an issue on GitHub.
+For support, email prajwalkhot39@gmail.com.com or open an issue on GitHub.
 
 ### Report a Bug
 Found a bug? Please open an issue with:
