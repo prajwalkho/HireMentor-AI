@@ -315,7 +315,7 @@ This project is licensed under the **MIT License** - see the LICENSE file for de
 - **LinkedIn:** [www.linkedin.com/in/prajwal-p-khot]
 
 ### Support
-For support, email prajwalkhot39@gmail.com.com or open an issue on GitHub.
+For support, email hirementorai@gmail.com or open an issue on GitHub.
 
 ### Report a Bug
 Found a bug? Please open an issue with:
