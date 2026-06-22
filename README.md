@@ -22,7 +22,11 @@
 
 ## 🎯 Project Overview
 
-**HireMentor-AI** is a comprehensive platform that bridges the gap between job seekers and employers by leveraging AI-powered features. It provides candidates with interview preparation, skill assessment, resume building, and personalized mentorship through AI-driven insights. Recruiters can conduct mock interviews, assess candidates, and manage the hiring process efficiently.
+**HireMentor-AI** is a comprehensive platform that bridges the gap between job seekers and employers by leveraging AI-powered features. It provides candidates with interview preparation, skill assessment, resume building, and personalized mentorship through AI-driven insights. Recruiters can conduct mock interviews, assess candidates, and manage the hiring process efficiently. 
+
+🏁 Live HireMentor AI
+
+Demo URL - https://client-phi-one-34.vercel.app/
 
 ## ✨ Features
 
