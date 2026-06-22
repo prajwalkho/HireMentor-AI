@@ -26,7 +26,7 @@
 
 🏁 Live HireMentor AI
 
-Demo URL - https://client-phi-one-34.vercel.app/
+Demo URL - [HireMentor AI](https://hirementor-ai.vercel.app/)
 
 ## ✨ Features
 
