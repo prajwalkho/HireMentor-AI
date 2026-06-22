@@ -312,7 +312,7 @@ This project is licensed under the **MIT License** - see the LICENSE file for de
 
 ## 👥 Contact & Support
 
-### Author
+### Developer
 - **Name:** Prajwal Khot
 - **Email:** [prajwalkhot39@gmail.com]
 - **GitHub:** [@prajwalkho](https://github.com/prajwalkho)
