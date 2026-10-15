@@ -3,12 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import Loader from '../Loader'
 import toast from 'react-hot-toast'
-import { axiosInstance, endPoints } from '../../api/axios'
+import { axiosInstance, endPoints, getAssetUrl } from '../../api/axios'
 
 const UpdateProfile = () => {
   const navigate = useNavigate()
   const [loader, setLoader] = useState(false)
-const BASE_URL = import.meta.env.VITE_BASE_URL;
   const [userData, setUserData] = useState({
     first_Name: '',
     last_Name: '',
@@ -167,7 +166,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
     const photoPath = typeof userData.profilePhoto === 'object' ? userData.profilePhoto.url : userData.profilePhoto;
     if (!photoPath) return 'https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg';
     
-    return `${BASE_URL}/${photoPath.replaceAll('\\', '/')}`;
+    return getAssetUrl(photoPath);
   };
 
   return (

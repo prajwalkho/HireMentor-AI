@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { axiosInstance, endPoints } from "../api/axios";
+import { axiosInstance, endPoints, getAssetUrl } from "../api/axios";
 import { MdMenu, MdClose, MdNotifications, MdLogout, MdPerson, MdSettings, MdKeyboardArrowDown } from "react-icons/md";
-
-const BASE_URL = "http://localhost:9000";
 
 const Navbar = ({ onMenuToggle, isSidebarCollapsed }) => {
   const currentUser = JSON.parse(localStorage.getItem("user"));
@@ -51,8 +49,7 @@ const Navbar = ({ onMenuToggle, isSidebarCollapsed }) => {
         (currentUser?.first_Name || "U") + "+" + (currentUser?.last_Name || "")
       )}&background=4F46E5&color=fff&size=128&bold=true`;
     }
-    if (photoPath.startsWith("http")) return photoPath;
-    return `${BASE_URL}/${photoPath.replace(/\\/g, "/")}`;
+    return getAssetUrl(photoPath);
   };
 
   // Breadcrumb generation

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Loader from '../Loader'
+import { getAssetUrl } from '../../api/axios'
 
 const EditProfiles = () => {
   const user = JSON.parse(localStorage.getItem('user'))
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
   const [loader, setLoader] = useState(false)
   const formatDate = dateString => {
     const date = new Date(dateString)
@@ -29,7 +29,7 @@ const EditProfiles = () => {
     const photoPath = typeof user.profilePhoto === 'object' ? user.profilePhoto.url : user.profilePhoto;
     if (!photoPath) return 'https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg';
     
-    return `${VITE_BASE_URL}/${photoPath.replaceAll('\\', '/')}`;
+    return getAssetUrl(photoPath);
   };
 
   return (

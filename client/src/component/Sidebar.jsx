@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { adminrole, sidebarItems } from "../sidebar/sidebardata";
+import { getAssetUrl } from "../api/axios";
 import { MdClose, MdChevronRight, MdExpandMore } from "react-icons/md";
-
-const BASE_URL = "http://localhost:9000";
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar, isCollapsed }) {
   const [activeItem, setActiveItem] = useState(null);
@@ -82,8 +81,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar, isCollapsed }) {
         (currentUser?.first_Name || "U") + "+" + (currentUser?.last_Name || "")
       )}&background=4F46E5&color=fff&size=128&bold=true`;
     }
-    if (photoPath.startsWith("http")) return photoPath;
-    return `${BASE_URL}/${photoPath.replace(/\\/g, "/")}`;
+    return getAssetUrl(photoPath);
   };
 
   return (

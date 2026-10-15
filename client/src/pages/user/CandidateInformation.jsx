@@ -6,7 +6,7 @@ import makeAnimated from 'react-select/animated';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../component/Loader';
-import { axiosInstance, endPoints } from '../../api/axios';
+import { axiosInstance, endPoints, getAssetUrl } from '../../api/axios';
 
 const CandidateInformation = () => {
   const navigate = useNavigate();
@@ -24,9 +24,9 @@ const CandidateInformation = () => {
   // Handle both new uploads (blob URLs) and existing files (paths)
   const [previewProfile, setPreviewProfile] = useState(
   user?.profilePhoto
-    ? user.profilePhoto.startsWith('data:image') || user.profilePhoto.startsWith('blob:')
-      ? user.profilePhoto // base64 or blob from FileReader or URL.createObjectURL
-      : `http://localhost:9000/${user.profilePhoto.replaceAll('\\', '/')}` // server image path
+    ? typeof user.profilePhoto === 'object'
+      ? getAssetUrl(user.profilePhoto.url)
+      : getAssetUrl(user.profilePhoto)
     : 'https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg'
 );
 

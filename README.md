@@ -115,8 +115,8 @@ cd client
 # Install dependencies
 npm install
 
-# Create .env file with API endpoints
-VITE_API_URL=http://localhost:5000/api
+# Create .env file with API endpoint
+VITE_BASE_URL=http://localhost:9000
 ```
 
 ## 📖 Usage
@@ -231,7 +231,7 @@ Create a `.env` file in the server directory:
 
 ```env
 # MongoDB
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/hireAI
+DATABASE_URL=your_mongodb_connection_string
 
 # JWT
 JWT_SECRET=your_jwt_secret_key
@@ -242,13 +242,14 @@ GEMINI_API_KEYS=first_authorized_key,second_authorized_key
 # For one key, GEMINI_API_KEY=your_gemini_api_key is also supported
 
 # Cloudinary
-CLOUDINARY_NAME=your_cloudinary_name
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # Email Service (SMTP)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
+SMTP_SECURE=false
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
 
@@ -256,7 +257,7 @@ SMTP_PASS=your_app_password
 CLIENT_URL=http://localhost:5173
 
 # Server Port
-PORT=5000
+PORT=9000
 NODE_ENV=development
 ```
 
@@ -269,8 +270,42 @@ restarts. Run the backend's offline rotation tests with
 Create a `.env.local` file in the client directory:
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_BASE_URL=http://localhost:9000
 ```
+
+## Deploying to Vercel
+
+Deploy the frontend and API as two Vercel projects connected to this repository:
+
+1. Create the frontend project with **Root Directory** set to `client`. Use the
+   Vite build command `npm run build` and output directory `dist`. Keep the
+   included `client/vercel.json` SPA rewrite.
+2. Create the API project with **Root Directory** set to `server`. Vercel
+   detects the exported Express app in `server.js`; do not add a separate
+   `/api` rewrite. The `/health` endpoint responds without requiring MongoDB.
+3. Add these server-side environment variables to the API project for each
+   environment:
+   - `DATABASE_URL`, `JWT_SECRET`
+   - `GEMINI_API_KEYS` (or `GEMINI_API_KEY`)
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - `CLIENT_URL` set to the exact frontend origin, with no trailing slash
+   - `SMTP_USER`, `SMTP_PASS`; optionally set `SMTP_HOST`, `SMTP_PORT`, and
+     `SMTP_SECURE` when using a non-default SMTP server
+4. Set the frontend project's `VITE_BASE_URL` to the API project's origin,
+   such as `https://your-api-project.vercel.app` (no `/api` suffix), then
+   redeploy the frontend. Update `CLIENT_URL` to the deployed frontend origin
+   and redeploy the API.
+5. Confirm the API is responding at `https://your-api-project.vercel.app/health`.
+
+Uploads use temporary storage, and profile photos are persisted in Cloudinary.
+Vercel Functions impose a request-body limit, so larger multipart uploads may
+exceed the platform limit; use direct-to-Cloudinary browser uploads or a
+separate upload service if the application needs larger files. Existing
+database records that point to local-disk image paths must be migrated to
+Cloudinary or re-uploaded; Vercel does not preserve files written by a function
+between invocations. Configure replacement credentials in Vercel's
+server-side environment settings only. Any credentials previously pasted
+into chat or committed in old Git history should be revoked and replaced.
 
 ## 🤝 Contributing
 

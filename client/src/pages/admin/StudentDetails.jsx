@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { axiosInstance, endPoints } from "../../api/axios";
+import { axiosInstance, endPoints, getAssetUrl } from "../../api/axios";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import PageLoader from "../../component/PageLoader";
@@ -11,8 +11,6 @@ import {
   MdTrendingUp, MdCake,
 } from "react-icons/md";
 import { FiBook, FiAward } from "react-icons/fi";
-
-const BASE_URL = "http://localhost:9000";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -98,8 +96,7 @@ const StudentDetails = () => {
       return `https://ui-avatars.com/api/?name=${name}&background=4F46E5&color=fff&size=128&bold=true`;
     }
     const url = user.profilePhoto.url;
-    if (url.startsWith("http")) return url;
-    return `${BASE_URL}/${url.replace(/\\/g, "/")}`;
+    return getAssetUrl(url);
   };
 
   const completionRate = analytics.totalEnrolled

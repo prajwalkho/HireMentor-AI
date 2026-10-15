@@ -1,6 +1,6 @@
-const path = require('path');
-const fs = require('fs');
+const fs = require("fs/promises");
 const senData = require("../config/mail");
+const cloudinary = require("../config/cloudinary");
 const Auth = require("../models/authmodel");
 const Enroll = require("../models/enrollCoursemodel");
 const Exam = require("../models/examManagemenModel");
@@ -12,18 +12,6 @@ const bcrypt = require("bcryptjs");
 const { generateToeken } = require("../utils/GenerateToken");
 const { loginUi } = require("../utils/loginGoogleUi");
 const otpStore = {};
-
-// Configure upload directory
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
-const PROFILE_DIR = path.join(UPLOAD_DIR, 'profiles');
-
-
-// Ensure directories exist
-[UPLOAD_DIR, PROFILE_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
 
 //register
 exports.register = async (req, res) => {
@@ -565,6 +553,8 @@ exports.getProfile = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
+  let uploadedProfilePhoto;
+
   try {
     const userId = req.user._id;
     const { first_Name, last_Name, birth_Date, gender, email } = req.body;
@@ -587,28 +577,35 @@ exports.updateProfile = async (req, res) => {
       email,
     };
 
+    const user = req.file ? await Auth.findById(userId) : null;
     if (req.file) {
-      const ext = path.extname(req.file.originalname);
-      const filename = `profile-${userId}-${Date.now()}${ext}`;
-      const filePath = path.join(PROFILE_DIR, filename);
+      if (!user) {
+        await fs.unlink(req.file.path).catch((error) => {
+          if (error.code !== "ENOENT") {
+            console.error("Could not remove temporary profile upload.");
+          }
+        });
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
 
-      // Move the file to the upload directory
-      await fs.promises.rename(req.file.path, filePath);
-
-      // Store as object to match schema
-      updateData.profilePhoto = {
-        public_id: filename,
-        url: `profiles/${filename}`
-      };
-
-      // Optional: Delete old photo
-      const user = await Auth.findById(userId);
-      if (user.profilePhoto && user.profilePhoto.url) {
-        const oldPhotoPath = user.profilePhoto.url.replace('profiles/', '');
-        const oldFilePath = path.join(PROFILE_DIR, oldPhotoPath);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
+      try {
+        uploadedProfilePhoto = await cloudinary.uploader.upload(req.file.path, {
+          folder: "hirementor/profiles",
+          resource_type: "image",
+        });
+        updateData.profilePhoto = {
+          public_id: uploadedProfilePhoto.public_id,
+          url: uploadedProfilePhoto.secure_url,
+        };
+      } finally {
+        await fs.unlink(req.file.path).catch((error) => {
+          if (error.code !== "ENOENT") {
+            console.error("Could not remove temporary profile upload.");
+          }
+        });
       }
     }
 
@@ -619,10 +616,25 @@ exports.updateProfile = async (req, res) => {
     ).select("-password -otp -otpExpiration");
 
     if (!updatedUser) {
+      if (uploadedProfilePhoto?.public_id) {
+        try {
+          await cloudinary.uploader.destroy(uploadedProfilePhoto.public_id);
+        } catch {
+          console.error("Could not clean up an unreferenced profile image.");
+        }
+      }
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
+    }
+
+    if (user?.profilePhoto?.public_id && updateData.profilePhoto) {
+      try {
+        await cloudinary.uploader.destroy(user.profilePhoto.public_id);
+      } catch {
+        console.error("Could not remove previous profile image from Cloudinary.");
+      }
     }
 
     res.status(200).json({
@@ -631,6 +643,14 @@ exports.updateProfile = async (req, res) => {
       data: updatedUser,
     });
   } catch (error) {
+    if (uploadedProfilePhoto?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(uploadedProfilePhoto.public_id);
+      } catch {
+        console.error("Could not clean up an unreferenced profile image.");
+      }
+    }
+
     console.error(error);
     res.status(400).json({
       success: false,
@@ -651,17 +671,18 @@ exports.deleteProfilePhoto = async (req, res) => {
       });
     }
 
-    // Delete photo from local storage if exists
-    if (user.profilePhoto && user.profilePhoto.url) {
-      const photoPath = user.profilePhoto.url.replace('profiles/', '');
-      const filePath = path.join(PROFILE_DIR, photoPath);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
+    const previousPhotoId = user.profilePhoto?.public_id;
 
     user.profilePhoto = undefined;
     await user.save();
+
+    if (previousPhotoId) {
+      try {
+        await cloudinary.uploader.destroy(previousPhotoId);
+      } catch {
+        console.error("Could not remove profile image from Cloudinary.");
+      }
+    }
 
     res.status(200).json({
       success: true,

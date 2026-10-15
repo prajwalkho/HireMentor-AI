@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { axiosInstance, endPoints } from "../../api/axios";
+import { axiosInstance, endPoints, getAssetUrl } from "../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import PageLoader from "../../component/PageLoader";
@@ -11,16 +11,13 @@ import {
 } from "react-icons/md";
 import { FiUsers } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:9000";
-
 const getAvatarUrl = (user) => {
   const name = encodeURIComponent((user?.first_Name || "U") + "+" + (user?.last_Name || ""));
   if (!user?.profilePhoto?.url) {
     return `https://ui-avatars.com/api/?name=${name}&background=4F46E5&color=fff&size=64&bold=true`;
   }
   const url = user.profilePhoto.url;
-  if (url.startsWith("http")) return url;
-  return `${BASE_URL}/${url.replace(/\\/g, "/")}`;
+  return getAssetUrl(url);
 };
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, danger }) => {

@@ -3,11 +3,12 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const axios = require("axios");
+require("dotenv").config();
 const {
   generateAIContent,
   getGeminiErrorInfo,
 } = require("./src/utils/geminiService");
-require("dotenv").config();
+const { connectDB } = require("./src/config/db");
 
 const app = express();
 
@@ -26,16 +27,46 @@ app.use(
 
 app.use(cookieParser());
 
-require("./src/config/db");
-
 const port = process.env.PORT || 5000;
 
+const allowedOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const corsOptions = {
-  origin: true,
+  origin(origin, callback) {
+    const localDevelopmentOrigin =
+      process.env.NODE_ENV !== "production" &&
+      (origin === "http://localhost:5173" || origin === "http://localhost:4173");
+
+    callback(null, !origin || allowedOrigins.includes(origin) || localDevelopmentOrigin);
+  },
   credentials: true,
 };
 
 app.use(cors(corsOptions));
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch {
+    console.error("MongoDB is unavailable; request could not be served.");
+    res.status(503).json({
+      success: false,
+      message: "The database is temporarily unavailable. Please try again later.",
+    });
+  }
+});
 
 // ======================================================
 // ROUTES
@@ -199,10 +230,10 @@ app.post("/api/v1/ai/chat", async (req, res) => {
 
 // ======================================================
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`✅ Server running on port ${port}`);
+  });
+}
 
-app.listen(port, () => {
-  console.log(`✅ Server running on port ${port}`);
-});
+module.exports = app;

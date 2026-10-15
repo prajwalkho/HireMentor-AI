@@ -2,8 +2,23 @@
 
 import axios from "axios";
 
+export const API_BASE_URL = (
+  import.meta.env.VITE_BASE_URL || "http://localhost:5000"
+).replace(/\/+$/, "");
+
+export const getAssetUrl = (assetPath) => {
+  if (!assetPath) return "";
+
+  const normalizedPath = assetPath.replace(/\\/g, "/");
+  if (/^(?:https?:)?\/\//i.test(normalizedPath) || /^(?:data|blob):/i.test(normalizedPath)) {
+    return normalizedPath;
+  }
+
+  return `${API_BASE_URL}/${normalizedPath.replace(/^\/+/, "")}`;
+};
+
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL,
+  baseURL: API_BASE_URL,
    withCredentials: true,
   headers: {
     "Content-Type": "application/json",

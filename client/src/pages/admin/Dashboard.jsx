@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import PageLoader from "../../component/PageLoader";
 import toast from "react-hot-toast";
-import { axiosInstance, endPoints } from "../../api/axios";
+import { axiosInstance, endPoints, getAssetUrl } from "../../api/axios";
 import { motion } from "framer-motion";
 import {
   FiUsers, FiBriefcase, FiBook, FiAward,
@@ -12,8 +12,6 @@ import {
   MdVerified, MdBlock, MdPersonAdd, MdSearch, MdArrowForward,
   MdAdminPanelSettings, MdAnalytics,
 } from "react-icons/md";
-
-const BASE_URL = "http://localhost:9000";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -179,8 +177,7 @@ const Dashboard = () => {
       return `https://ui-avatars.com/api/?name=${name}&background=4F46E5&color=fff&size=64&bold=true`;
     }
     const url = user.profilePhoto.url;
-    if (url.startsWith("http")) return url;
-    return `${BASE_URL}/${url.replace(/\\/g, "/")}`;
+    return getAssetUrl(url);
   };
 
   const filteredCourses = courseInfo.filter((c) =>
