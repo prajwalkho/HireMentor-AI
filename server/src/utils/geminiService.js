@@ -18,6 +18,11 @@ const getErrorMessage = (error) =>
     .filter(Boolean)
     .join(" ");
 
+const redactApiKeys = (message, apiKeys) =>
+  apiKeys
+    .reduce((safeMessage, apiKey) => safeMessage.replaceAll(apiKey, "[REDACTED]"), message)
+    .replace(/([?&]key=)[^&\s]+/gi, "$1[REDACTED]");
+
 const isQuotaError = (error) =>
   getErrorStatus(error) === 429 ||
   /RESOURCE_EXHAUSTED|quota exceeded|rate[- ]limit/i.test(getErrorMessage(error));
@@ -119,6 +124,14 @@ const createGeminiService = ({
           continue;
         }
 
+        const diagnosticMessage = getErrorMessage(error);
+        logger.error?.("Gemini request failed.", {
+          model: modelName,
+          keySlot: keyIndex + 1,
+          status: getErrorStatus(error) || undefined,
+          code: error?.response?.data?.error?.status || error?.code || undefined,
+          message: redactApiKeys(diagnosticMessage, keys).slice(0, 500),
+        });
         throw error;
       }
     }
@@ -151,7 +164,16 @@ const createGeminiService = ({
     }
   };
 
-  return { generateContent, generateAIContent };
+  return {
+    generateContent,
+    generateAIContent,
+    getConfigurationInfo: () => ({
+      configuredKeyCount: keys.length,
+      disabledKeyCount: disabledKeys.size,
+      primaryModel: PRIMARY_MODEL,
+      fallbackModel: FALLBACK_MODEL,
+    }),
+  };
 };
 
 const geminiService = createGeminiService();
@@ -170,6 +192,7 @@ const getGeminiErrorInfo = (error) => {
 module.exports = {
   createGeminiService,
   generateAIContent: geminiService.generateAIContent,
+  getGeminiRuntimeInfo: geminiService.getConfigurationInfo,
   getGeminiErrorInfo,
   parseApiKeys,
 };

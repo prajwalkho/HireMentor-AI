@@ -6,9 +6,12 @@ const axios = require("axios");
 require("dotenv").config();
 const {
   generateAIContent,
+  getGeminiRuntimeInfo,
   getGeminiErrorInfo,
 } = require("./src/utils/geminiService");
 const { connectDB } = require("./src/config/db");
+
+console.info("Gemini runtime configuration", getGeminiRuntimeInfo());
 
 const app = express();
 

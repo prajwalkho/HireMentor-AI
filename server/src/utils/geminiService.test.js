@@ -176,3 +176,47 @@ test("uses the existing fallback model on a 503 without treating it as quota rot
     ["gemini-3.8-flash", "gemini-3.6-flash"]
   );
 });
+
+test("logs actionable Gemini errors without logging API keys", async () => {
+  const apiKey = "authorized-secret-key";
+  const logs = [];
+  const service = createGeminiService({
+    apiKeys: [apiKey],
+    clientFactory: () => ({
+      getGenerativeModel: () => ({
+        generateContent: async () => {
+          throw {
+            status: 403,
+            message: `Request failed for key ${apiKey}`,
+          };
+        },
+      }),
+    }),
+    logger: {
+      warn() {},
+      error: (message, details) => logs.push({ message, details }),
+    },
+  });
+
+  await assert.rejects(service.generateContent("hello"));
+
+  assert.equal(logs.length, 1);
+  assert.equal(logs[0].details.status, 403);
+  assert.equal(logs[0].details.message.includes(apiKey), false);
+  assert.match(logs[0].details.message, /\[REDACTED\]/);
+});
+
+test("reports Gemini configuration without exposing key values", () => {
+  const service = createGeminiService({
+    apiKeys: ["authorized-key-a", "authorized-key-b"],
+    clientFactory: () => ({}),
+    logger: createLogger(),
+  });
+
+  assert.deepEqual(service.getConfigurationInfo(), {
+    configuredKeyCount: 2,
+    disabledKeyCount: 0,
+    primaryModel: "gemini-3.8-flash",
+    fallbackModel: "gemini-3.6-flash",
+  });
+});

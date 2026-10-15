@@ -32,13 +32,16 @@ const AiCareerCoach = () => {
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
         toast.success("AI response generated Successfully!");
       } catch (error) {
-        toast.error(
-          "Error calling Gemini API:",
-          error.response?.data || error.message
-        );
+        const diagnosticMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          (error.response
+            ? `AI request failed (${error.response.status}).`
+            : "Could not reach the AI API. Check VITE_BASE_URL and the backend CORS configuration.");
+        toast.error(diagnosticMessage);
 
         const errorMessage = {
-          text: "There was an issue connecting to the AI. Please try again later.",
+          text: diagnosticMessage,
           sender: "left",
         };
         setMessages((prevMessages) => [...prevMessages, errorMessage]);
