@@ -238,7 +238,8 @@ JWT_SECRET=your_jwt_secret_key
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
 
 # Google Gemini API
-GEMINI_API_KEY=your_gemini_api_key
+GEMINI_API_KEYS=first_authorized_key,second_authorized_key
+# For one key, GEMINI_API_KEY=your_gemini_api_key is also supported
 
 # Cloudinary
 CLOUDINARY_NAME=your_cloudinary_name
@@ -258,6 +259,12 @@ CLIENT_URL=http://localhost:5173
 PORT=5000
 NODE_ENV=development
 ```
+
+Gemini keys must be independently authorized for this application. Key rotation
+only retries a different key after a rate-limit/quota response; do not use it to
+bypass Google's quotas. Invalid or revoked keys are disabled until the backend
+restarts. Run the backend's offline rotation tests with
+`npm --prefix server run test:gemini-rotation`.
 
 Create a `.env.local` file in the client directory:
 

@@ -3,7 +3,10 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const axios = require("axios");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const {
+  generateAIContent,
+  getGeminiErrorInfo,
+} = require("./src/utils/geminiService");
 require("dotenv").config();
 
 const app = express();
@@ -98,24 +101,6 @@ app.post("/api/v1/run-code", async (req, res) => {
 });
 
 // ======================================================
-// GEMINI AI SETUP
-// ======================================================
-
-console.log(
-  "🔑 Gemini API Key Loaded:",
-  process.env.GEMINI_API_KEY ? "YES (Masked)" : "NO"
-);
-
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY
-);
-
-// ✅ WORKING MODEL
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-});
-
-// ======================================================
 // INTERVIEW QUESTION GENERATOR
 // ======================================================
 
@@ -141,7 +126,7 @@ Experience: ${jobExperience}
 Return ONLY valid JSON.
 `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateAIContent(prompt);
 
     const response = await result.response;
 
@@ -160,14 +145,15 @@ Return ONLY valid JSON.
       data: parsed,
     });
   } catch (error) {
+    const errorInfo = getGeminiErrorInfo(error);
     console.error(
-      "❌ Gemini SDK Error (Interview):",
-      error.message
+      `Gemini interview generation failed (${error?.name || "unknown error"}).`
     );
 
-    res.status(500).json({
+    res.status(errorInfo.status).json({
       success: false,
-      error: "Failed to generate interview",
+      error: errorInfo.message,
+      ...(errorInfo.code ? { code: errorInfo.code } : {}),
     });
   }
 });
@@ -186,7 +172,7 @@ app.post("/api/v1/ai/chat", async (req, res) => {
       });
     }
 
-    const result = await model.generateContent(prompt);
+    const result = await generateAIContent(prompt);
 
     const response = await result.response;
 
@@ -198,14 +184,15 @@ app.post("/api/v1/ai/chat", async (req, res) => {
       data: aiResponse,
     });
   } catch (error) {
+    const errorInfo = getGeminiErrorInfo(error);
     console.error(
-      "❌ Gemini SDK Error (Chat):",
-      error.message
+      `Gemini chat request failed (${error?.name || "unknown error"}).`
     );
 
-    res.status(500).json({
+    res.status(errorInfo.status).json({
       success: false,
-      error: "Failed to connect to AI",
+      error: errorInfo.message,
+      ...(errorInfo.code ? { code: errorInfo.code } : {}),
     });
   }
 });

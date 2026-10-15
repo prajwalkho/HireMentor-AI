@@ -13,6 +13,8 @@ const authschema=  new Schema({
     },
     birth_Date:{
         type:Date,
+       required: true,
+
     },
     gender:{
        type:String,

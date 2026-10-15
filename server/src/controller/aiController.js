@@ -1,7 +1,7 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-require("dotenv").config();
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const {
+  generateAIContent,
+  getGeminiErrorInfo,
+} = require("../utils/geminiService");
 
 const chatWithGemini = async (req, res) => {
   try {
@@ -14,10 +14,7 @@ const chatWithGemini = async (req, res) => {
       });
     }
 
-    // Using the latest Gemini 1.5 Flash model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
-    const result = await model.generateContent(prompt);
+    const result = await generateAIContent(prompt);
     const response = await result.response;
     const text = response.text();
 
@@ -26,11 +23,12 @@ const chatWithGemini = async (req, res) => {
       data: text,
     });
   } catch (error) {
-    console.error("Ask Me Error:", error);
-    res.status(500).json({
+    const errorInfo = getGeminiErrorInfo(error);
+    console.error(`Gemini controller request failed (${error?.name || "unknown error"}).`);
+    res.status(errorInfo.status).json({
       success: false,
-      message: "Error communicating with AI",
-      error: error.message,
+      message: errorInfo.message,
+      ...(errorInfo.code ? { code: errorInfo.code } : {}),
     });
   }
 };

@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+**/node_modules/
+**/uploads/
+**/dist/
+**/build/
+**/coverage/
+server/.git/
+server/src/google-credentials.json
+client/public/assets/UltraViewer_setup_6.6.110_en.exe
