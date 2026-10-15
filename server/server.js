@@ -55,7 +55,16 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+const databaseIndependentPaths = new Set([
+  "/api/v1/ai/chat",
+  "/api/generate-interview",
+]);
+
 app.use(async (req, res, next) => {
+  if (databaseIndependentPaths.has(req.path.replace(/\/+$/, ""))) {
+    return next();
+  }
+
   try {
     await connectDB();
     next();
