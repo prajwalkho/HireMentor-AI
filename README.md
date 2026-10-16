@@ -26,7 +26,17 @@
 
 🏁 Live HireMentor AI
 
-Demo URL - [HireMentor AI](https://hirementor-ai.vercel.app/)
+🌐 Explore the Live Project: - [HireMentor AI](https://hirementor-ai.vercel.app/)
+
+🔐 Demo Login Credentials
+
+Account 1
+Email: arjun@student.com
+Password: student@123
+
+Account 2
+Email: priya@student.com
+Password: student@123
 
 ## ✨ Features
 
